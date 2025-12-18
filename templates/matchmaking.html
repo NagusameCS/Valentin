@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentin - Matchmaking Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Matchmaking Results</h1>
+        <table class="matches-table">
+            <thead>
+                <tr>
+                    <th>Person A</th>
+                    <th>Person B</th>
+                    <th>Compatibility Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                <tr>
+                    <td>{{ match[0].email }} ({{ match[0].gender }}, Gr: {{ match[0].grade }})</td>
+                    <td>{{ match[1].email }} ({{ match[1].gender }}, Gr: {{ match[1].grade }})</td>
+                    <td>{{ "%.2f"|format(match[2]) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

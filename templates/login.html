@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentin - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="login-container">
+        <h1 class="login-title">L<span class="heart">❤</span>GIN</h1>
+        <p>Please sign in to continue to the questionnaire.</p>
+
+        <!-- Mock Google Login Form -->
+        <form action="/login" method="POST">
+            <input type="email" name="email" placeholder="Enter your school email" required>
+            <button type="submit" class="google-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                    alt="Google Logo">
+                Sign in with Google
+            </button>
+        </form>
+    </div>
+</body>
+
+</html>
