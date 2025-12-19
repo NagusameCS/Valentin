@@ -197,6 +197,16 @@ const successModal = document.getElementById('successModal');
 // Map instance
 let mapInstance = null;
 
+// Heart cursor click effect
+document.addEventListener('click', function(e) {
+    const pulse = document.createElement('div');
+    pulse.className = 'click-pulse';
+    pulse.style.left = e.clientX + 'px';
+    pulse.style.top = e.clientY + 'px';
+    document.body.appendChild(pulse);
+    setTimeout(() => pulse.remove(), 600);
+});
+
 function updateProgress() {
     const progress = ((currentQuestionIndex + 1) / allQuestions.length) * 100;
     progressBar.style.width = `${progress}%`;
@@ -209,18 +219,18 @@ function renderQuestion() {
     container.innerHTML = '';
     container.style.animation = 'none';
     container.offsetHeight; // Trigger reflow
-    container.style.animation = 'fadeIn 0.3s ease';
+    container.style.animation = 'fadeInUp 0.4s ease';
 
     const q = allQuestions[currentQuestionIndex];
 
     const title = document.createElement('h2');
     title.textContent = q.question;
+    title.className = 'question-title';
     container.appendChild(title);
 
     if (q.subtitle) {
         const subtitle = document.createElement('p');
-        subtitle.style.color = '#666';
-        subtitle.style.marginBottom = '20px';
+        subtitle.className = 'question-subtitle';
         subtitle.textContent = q.subtitle;
         container.appendChild(subtitle);
     }
@@ -278,11 +288,12 @@ function renderQuestion() {
     updateProgress();
 }
 
-// Select type (gender, preferences)
+// Select type (gender, preferences) - AUTO ADVANCE
 function renderSelect(q) {
     q.options.forEach((opt, idx) => {
         const btn = document.createElement('button');
-        btn.className = 'option-btn';
+        btn.className = 'option-btn animate-in';
+        btn.style.animationDelay = `${idx * 0.1}s`;
         if (answers[q.id] === opt) btn.classList.add('selected');
 
         btn.innerHTML = `
@@ -292,7 +303,8 @@ function renderSelect(q) {
 
         btn.onclick = () => {
             answers[q.id] = opt;
-            renderQuestion();
+            btn.classList.add('selected', 'pop');
+            setTimeout(() => nextQuestion(), 400);
         };
         container.appendChild(btn);
     });
@@ -301,10 +313,7 @@ function renderSelect(q) {
 // Number type (grade, age)
 function renderNumber(q) {
     const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
-    wrapper.style.alignItems = 'center';
-    wrapper.style.gap = '20px';
+    wrapper.className = 'number-wrapper animate-in';
 
     const input = document.createElement('input');
     input.type = 'number';
@@ -322,7 +331,7 @@ function renderNumber(q) {
     };
 
     const hint = document.createElement('p');
-    hint.style.color = '#666';
+    hint.className = 'number-hint';
     hint.textContent = `Enter a number between ${q.min} and ${q.max}`;
 
     wrapper.appendChild(input);
@@ -330,7 +339,7 @@ function renderNumber(q) {
     container.appendChild(wrapper);
 }
 
-// Map type
+// Map type - FIXED
 function renderMap(q) {
     const mapDiv = document.createElement('div');
     mapDiv.id = 'map';
@@ -341,35 +350,55 @@ function renderMap(q) {
     instruction.textContent = '📍 Click on the map to place your pin';
     container.appendChild(instruction);
 
-    setTimeout(() => {
+    // Use requestAnimationFrame for better timing
+    requestAnimationFrame(() => {
         if (mapInstance) {
             mapInstance.remove();
+            mapInstance = null;
         }
 
-        mapInstance = L.map('map').setView([40, -95], 4);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(mapInstance);
+        try {
+            mapInstance = L.map('map', {
+                center: [40, -95],
+                zoom: 4,
+                zoomControl: true,
+                attributionControl: true
+            });
 
-        let marker;
-        if (answers[q.id]) {
-            marker = L.marker([answers[q.id].lat, answers[q.id].lng]).addTo(mapInstance);
-            mapInstance.setView([answers[q.id].lat, answers[q.id].lng], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }).addTo(mapInstance);
+
+            // Invalidate size after render
+            setTimeout(() => {
+                mapInstance.invalidateSize();
+            }, 100);
+
+            let marker = null;
+            if (answers[q.id]) {
+                marker = L.marker([answers[q.id].lat, answers[q.id].lng]).addTo(mapInstance);
+                mapInstance.setView([answers[q.id].lat, answers[q.id].lng], 8);
+            }
+
+            mapInstance.on('click', function (e) {
+                if (marker) mapInstance.removeLayer(marker);
+                marker = L.marker(e.latlng).addTo(mapInstance);
+                answers[q.id] = { lat: e.latlng.lat, lng: e.latlng.lng };
+                instruction.textContent = `📍 Location: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+                instruction.classList.add('pulse-text');
+            });
+        } catch (err) {
+            console.error('Map error:', err);
+            instruction.textContent = '⚠️ Map loading error. Please try again.';
         }
-
-        mapInstance.on('click', function (e) {
-            if (marker) mapInstance.removeLayer(marker);
-            marker = L.marker(e.latlng).addTo(mapInstance);
-            answers[q.id] = { lat: e.latlng.lat, lng: e.latlng.lng };
-            instruction.textContent = `📍 Location: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-        });
-    }, 100);
+    });
 }
 
 // Slider type
 function renderSlider(q) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'slider-wrapper';
+    wrapper.className = 'slider-wrapper animate-in';
 
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -378,15 +407,14 @@ function renderSlider(q) {
     slider.value = answers[q.id] || 50;
 
     const valueDisplay = document.createElement('div');
-    valueDisplay.style.fontSize = '2rem';
-    valueDisplay.style.fontWeight = '600';
-    valueDisplay.style.color = '#ff4d6d';
-    valueDisplay.style.marginBottom = '20px';
+    valueDisplay.className = 'slider-value-display';
     valueDisplay.textContent = (answers[q.id] || 50) + '%';
 
     slider.oninput = (e) => {
         answers[q.id] = parseInt(e.target.value);
         valueDisplay.textContent = e.target.value + '%';
+        valueDisplay.classList.add('bounce');
+        setTimeout(() => valueDisplay.classList.remove('bounce'), 200);
     };
 
     const labels = document.createElement('div');
@@ -402,7 +430,7 @@ function renderSlider(q) {
 // Multi-slider type (qualities)
 function renderMultiSlider(q) {
     const multiContainer = document.createElement('div');
-    multiContainer.className = 'multi-slider-container';
+    multiContainer.className = 'multi-slider-container animate-in';
 
     const totalDisplay = document.createElement('div');
     totalDisplay.className = 'total-display';
@@ -419,9 +447,10 @@ function renderMultiSlider(q) {
     updateTotal();
     multiContainer.appendChild(totalDisplay);
 
-    q.items.forEach(item => {
+    q.items.forEach((item, idx) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'slider-container';
+        wrapper.className = 'slider-container animate-in';
+        wrapper.style.animationDelay = `${idx * 0.1}s`;
 
         const label = document.createElement('label');
         label.innerHTML = `
@@ -460,14 +489,15 @@ function renderMultiSlider(q) {
     container.appendChild(multiContainer);
 }
 
-// Grid type (subjects, music)
+// Grid type (subjects, music) - AUTO ADVANCE
 function renderGrid(q) {
     const grid = document.createElement('div');
     grid.className = 'grid-options';
 
-    q.options.forEach(opt => {
+    q.options.forEach((opt, idx) => {
         const item = document.createElement('div');
-        item.className = 'grid-item';
+        item.className = 'grid-item animate-in';
+        item.style.animationDelay = `${idx * 0.05}s`;
         const optName = typeof opt === 'object' ? opt.name : opt;
         const optIcon = typeof opt === 'object' ? opt.icon : '';
 
@@ -479,7 +509,8 @@ function renderGrid(q) {
 
         item.onclick = () => {
             answers[q.id] = optName;
-            renderQuestion();
+            item.classList.add('selected', 'pop');
+            setTimeout(() => nextQuestion(), 400);
         };
         grid.appendChild(item);
     });
@@ -487,14 +518,23 @@ function renderGrid(q) {
     container.appendChild(grid);
 }
 
-// Color picker type
+// Color picker type - HEART SHAPE
 function renderColor(q) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'color-picker-wrapper';
+    wrapper.className = 'color-picker-wrapper animate-in';
+
+    const heartContainer = document.createElement('div');
+    heartContainer.className = 'heart-color-container';
 
     const input = document.createElement('input');
     input.type = 'color';
+    input.id = 'colorInput';
     input.value = answers[q.id] || '#ff4d6d';
+
+    const heartLabel = document.createElement('label');
+    heartLabel.className = 'heart-color-picker';
+    heartLabel.htmlFor = 'colorInput';
+    heartLabel.style.setProperty('--heart-color', answers[q.id] || '#ff4d6d');
 
     const preview = document.createElement('div');
     preview.className = 'color-preview';
@@ -503,33 +543,50 @@ function renderColor(q) {
     input.oninput = (e) => {
         answers[q.id] = e.target.value;
         preview.textContent = e.target.value;
+        heartLabel.style.setProperty('--heart-color', e.target.value);
+        heartLabel.classList.add('pulse');
+        setTimeout(() => heartLabel.classList.remove('pulse'), 300);
     };
 
-    wrapper.appendChild(input);
+    heartContainer.appendChild(input);
+    heartContainer.appendChild(heartLabel);
+    wrapper.appendChild(heartContainer);
     wrapper.appendChild(preview);
     container.appendChild(wrapper);
 }
 
-// Ice cream type
+// Ice cream type - TUB STYLING
 function renderIceCream(q) {
     const wrapper = document.createElement('div');
     wrapper.className = 'ice-cream-container';
 
-    q.options.forEach(opt => {
+    q.options.forEach((opt, idx) => {
         const tub = document.createElement('div');
-        tub.className = 'ice-cream-tub';
-        tub.style.backgroundColor = opt.color;
+        tub.className = 'ice-cream-tub animate-in';
+        tub.style.animationDelay = `${idx * 0.1}s`;
+        tub.setAttribute('data-flavor', opt.name.toLowerCase());
 
         if (answers[q.id] === opt.name) tub.classList.add('selected');
 
-        tub.innerHTML = `
-            <span class="ice-icon">${opt.icon}</span>
-            <span>${opt.name}</span>
-        `;
+        const scoops = document.createElement('div');
+        scoops.className = 'ice-cream-scoops';
+        scoops.style.backgroundColor = opt.color;
+
+        const tubBody = document.createElement('div');
+        tubBody.className = 'ice-cream-tub-body';
+
+        const label = document.createElement('span');
+        label.className = 'ice-cream-label';
+        label.textContent = opt.name;
+
+        tub.appendChild(scoops);
+        tub.appendChild(tubBody);
+        tub.appendChild(label);
 
         tub.onclick = () => {
             answers[q.id] = opt.name;
-            renderQuestion();
+            tub.classList.add('selected', 'wobble');
+            setTimeout(() => nextQuestion(), 500);
         };
 
         wrapper.appendChild(tub);
@@ -538,67 +595,183 @@ function renderIceCream(q) {
     container.appendChild(wrapper);
 }
 
-// Clock type
+// Clock type - ANALOG CLOCK
 function renderClock(q) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'clock-wrapper';
+    wrapper.className = 'clock-wrapper animate-in';
 
+    // Analog clock face
+    const clockFace = document.createElement('div');
+    clockFace.className = 'analog-clock';
+
+    // Hour markers
+    for (let i = 1; i <= 12; i++) {
+        const marker = document.createElement('div');
+        marker.className = 'clock-marker';
+        marker.style.transform = `rotate(${i * 30}deg)`;
+        marker.innerHTML = `<span style="transform: rotate(${-i * 30}deg)">${i}</span>`;
+        clockFace.appendChild(marker);
+    }
+
+    // Center dot
+    const centerDot = document.createElement('div');
+    centerDot.className = 'clock-center';
+    clockFace.appendChild(centerDot);
+
+    // Hour hand
+    const hourHand = document.createElement('div');
+    hourHand.className = 'clock-hand hour-hand';
+    clockFace.appendChild(hourHand);
+
+    // Minute hand
+    const minuteHand = document.createElement('div');
+    minuteHand.className = 'clock-hand minute-hand';
+    clockFace.appendChild(minuteHand);
+
+    // Time display
     const display = document.createElement('div');
     display.className = 'clock-display';
-    display.textContent = formatTime(answers[q.id] || '22:00');
 
-    const input = document.createElement('input');
-    input.type = 'time';
-    input.className = 'clock-input';
-    input.value = answers[q.id] || '22:00';
+    // Hidden input for storing value
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.value = answers[q.id] || '22:00';
 
-    input.onchange = (e) => {
-        answers[q.id] = e.target.value;
-        display.textContent = formatTime(e.target.value);
+    // Parse initial time
+    let [hours, minutes] = (answers[q.id] || '22:00').split(':').map(Number);
+    let dragging = null;
+
+    function updateClock() {
+        const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+        const minDeg = minutes * 6;
+        hourHand.style.transform = `rotate(${hourDeg}deg)`;
+        minuteHand.style.transform = `rotate(${minDeg}deg)`;
+
+        const h12 = hours % 12 || 12;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        display.textContent = `${h12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+        answers[q.id] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+
+    function getAngleFromCenter(e, rect) {
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const x = e.clientX - centerX;
+        const y = e.clientY - centerY;
+        let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+        if (angle < 0) angle += 360;
+        return angle;
+    }
+
+    hourHand.addEventListener('mousedown', (e) => { dragging = 'hour'; e.preventDefault(); });
+    minuteHand.addEventListener('mousedown', (e) => { dragging = 'minute'; e.preventDefault(); });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = clockFace.getBoundingClientRect();
+        const angle = getAngleFromCenter(e, rect);
+
+        if (dragging === 'hour') {
+            hours = Math.floor(angle / 30) % 12;
+            if (hours === 0) hours = 12;
+            // Toggle AM/PM based on current setting
+            if (answers[q.id]) {
+                const currentHour = parseInt(answers[q.id].split(':')[0]);
+                if (currentHour >= 12) hours += 12;
+                if (hours === 24) hours = 12;
+            }
+        } else {
+            minutes = Math.round(angle / 6) % 60;
+        }
+        updateClock();
+    });
+
+    document.addEventListener('mouseup', () => { dragging = null; });
+
+    // AM/PM toggle
+    const ampmToggle = document.createElement('div');
+    ampmToggle.className = 'ampm-toggle';
+
+    const amBtn = document.createElement('button');
+    amBtn.type = 'button';
+    amBtn.textContent = 'AM';
+    amBtn.className = hours < 12 ? 'active' : '';
+    amBtn.onclick = () => {
+        if (hours >= 12) hours -= 12;
+        amBtn.classList.add('active');
+        pmBtn.classList.remove('active');
+        updateClock();
     };
 
+    const pmBtn = document.createElement('button');
+    pmBtn.type = 'button';
+    pmBtn.textContent = 'PM';
+    pmBtn.className = hours >= 12 ? 'active' : '';
+    pmBtn.onclick = () => {
+        if (hours < 12) hours += 12;
+        pmBtn.classList.add('active');
+        amBtn.classList.remove('active');
+        updateClock();
+    };
+
+    ampmToggle.appendChild(amBtn);
+    ampmToggle.appendChild(pmBtn);
+
+    const instruction = document.createElement('p');
+    instruction.className = 'clock-instruction';
+    instruction.textContent = '🕐 Drag the hands to set time';
+
+    wrapper.appendChild(clockFace);
     wrapper.appendChild(display);
-    wrapper.appendChild(input);
+    wrapper.appendChild(ampmToggle);
+    wrapper.appendChild(instruction);
     container.appendChild(wrapper);
+
+    updateClock();
 }
 
-function formatTime(time) {
-    const [hours, minutes] = time.split(':');
-    const h = parseInt(hours);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${minutes} ${ampm}`;
-}
-
-// Battery type
+// Battery type - VERTICAL with animations
 function renderBattery(q) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'battery-wrapper';
+    wrapper.className = 'battery-wrapper vertical animate-in';
 
     const labels = document.createElement('div');
     labels.className = 'battery-label';
     labels.textContent = 'Click to fill your social battery';
     wrapper.appendChild(labels);
 
+    const batteryOuter = document.createElement('div');
+    batteryOuter.className = 'battery-outer-vertical';
+
     const battery = document.createElement('div');
-    battery.className = 'battery-container';
-    const segments = 3;
-    const colors = ['red', 'yellow', 'green'];
-    const levelLabels = ['Low Energy 😴', 'Medium Energy 😊', 'High Energy 🔥'];
+    battery.className = 'battery-container-vertical';
 
-    for (let i = 0; i < segments; i++) {
+    const segments = 5;
+    const levelLabels = ['Empty 😴', 'Low 😐', 'Medium 😊', 'High 🔥', 'Maximum ⚡'];
+
+    for (let i = segments - 1; i >= 0; i--) {
         const seg = document.createElement('div');
-        seg.className = 'battery-segment';
+        seg.className = 'battery-segment-vertical';
+        seg.setAttribute('data-level', i);
 
-        // Fill based on current answer
-        if (answers[q.id] > i) {
-            seg.classList.add('active', colors[i]);
+        if (answers[q.id] && answers[q.id] > i) {
+            seg.classList.add('active');
         }
 
         seg.onclick = () => {
             answers[q.id] = i + 1;
             labels.textContent = levelLabels[i];
-            renderQuestion();
+            // Animate fill
+            const allSegs = battery.querySelectorAll('.battery-segment-vertical');
+            allSegs.forEach((s, idx) => {
+                const lvl = parseInt(s.getAttribute('data-level'));
+                if (lvl <= i) {
+                    s.classList.add('active');
+                    s.style.animationDelay = `${(i - lvl) * 0.1}s`;
+                } else {
+                    s.classList.remove('active');
+                }
+            });
         };
         battery.appendChild(seg);
     }
@@ -607,18 +780,20 @@ function renderBattery(q) {
         labels.textContent = levelLabels[answers[q.id] - 1];
     }
 
-    wrapper.appendChild(battery);
+    batteryOuter.appendChild(battery);
+    wrapper.appendChild(batteryOuter);
     container.appendChild(wrapper);
 }
 
-// Season type
+// Season type - AUTO ADVANCE
 function renderSeason(q) {
     const seasonContainer = document.createElement('div');
     seasonContainer.className = 'season-container';
 
-    q.options.forEach(opt => {
+    q.options.forEach((opt, idx) => {
         const item = document.createElement('div');
-        item.className = 'season-item';
+        item.className = 'season-item animate-in';
+        item.style.animationDelay = `${idx * 0.1}s`;
         if (answers[q.id] === opt.name) item.classList.add('selected');
 
         item.innerHTML = `
@@ -628,7 +803,8 @@ function renderSeason(q) {
 
         item.onclick = () => {
             answers[q.id] = opt.name;
-            renderQuestion();
+            item.classList.add('selected', 'pop');
+            setTimeout(() => nextQuestion(), 400);
         };
 
         seasonContainer.appendChild(item);
@@ -637,14 +813,14 @@ function renderSeason(q) {
     container.appendChild(seasonContainer);
 }
 
-// Rank type with drag and drop
+// Rank type with drag and drop - FIXED
 function renderRank(q) {
     const rankContainer = document.createElement('div');
-    rankContainer.className = 'rank-container';
+    rankContainer.className = 'rank-container animate-in';
 
     const instruction = document.createElement('p');
     instruction.className = 'rank-instruction';
-    instruction.textContent = '↕️ Drag to reorder (1 = favorite)';
+    instruction.textContent = '↕️ Drag items to reorder (1 = favorite)';
     rankContainer.appendChild(instruction);
 
     const list = document.createElement('ul');
@@ -652,16 +828,17 @@ function renderRank(q) {
     list.id = 'rankList';
 
     // Use saved order or default
-    const items = answers[q.id] || q.options;
+    const items = answers[q.id] || [...q.options];
 
     items.forEach((opt, idx) => {
         const li = document.createElement('li');
-        li.className = 'rank-item';
+        li.className = 'rank-item animate-in';
+        li.style.animationDelay = `${idx * 0.1}s`;
         li.setAttribute('data-value', opt);
         li.innerHTML = `
             <span class="rank-number">${idx + 1}</span>
-            <span>${opt}</span>
-            <span class="rank-handle">☰</span>
+            <span class="rank-text">${opt}</span>
+            <span class="rank-handle">⋮⋮</span>
         `;
         list.appendChild(li);
     });
@@ -669,31 +846,39 @@ function renderRank(q) {
     rankContainer.appendChild(list);
     container.appendChild(rankContainer);
 
-    // Initialize Sortable
-    if (typeof Sortable !== 'undefined') {
-        new Sortable(list, {
-            animation: 150,
-            handle: '.rank-item',
-            onEnd: function () {
-                const newOrder = [];
-                list.querySelectorAll('.rank-item').forEach((item, idx) => {
-                    newOrder.push(item.getAttribute('data-value'));
-                    item.querySelector('.rank-number').textContent = idx + 1;
-                });
-                answers[q.id] = newOrder;
-            }
-        });
-    }
+    // Initialize Sortable with better options
+    requestAnimationFrame(() => {
+        if (typeof Sortable !== 'undefined') {
+            new Sortable(list, {
+                animation: 200,
+                ghostClass: 'rank-ghost',
+                chosenClass: 'rank-chosen',
+                dragClass: 'rank-drag',
+                handle: '.rank-item',
+                onEnd: function () {
+                    const newOrder = [];
+                    list.querySelectorAll('.rank-item').forEach((item, idx) => {
+                        newOrder.push(item.getAttribute('data-value'));
+                        item.querySelector('.rank-number').textContent = idx + 1;
+                    });
+                    answers[q.id] = newOrder;
+                }
+            });
+        } else {
+            console.error('Sortable not loaded');
+        }
+    });
 }
 
-// Binary type
+// Binary type - AUTO ADVANCE
 function renderBinary(q) {
     const binaryContainer = document.createElement('div');
     binaryContainer.className = 'binary-container';
 
-    q.options.forEach(opt => {
+    q.options.forEach((opt, idx) => {
         const option = document.createElement('div');
-        option.className = 'binary-option';
+        option.className = 'binary-option animate-in';
+        option.style.animationDelay = `${idx * 0.15}s`;
         if (answers[q.id] === opt.name) option.classList.add('selected');
 
         option.innerHTML = `
@@ -703,7 +888,8 @@ function renderBinary(q) {
 
         option.onclick = () => {
             answers[q.id] = opt.name;
-            renderQuestion();
+            option.classList.add('selected', 'pop');
+            setTimeout(() => nextQuestion(), 400);
         };
 
         binaryContainer.appendChild(option);
@@ -741,9 +927,9 @@ async function submitData() {
 
     try {
         nextBtn.disabled = true;
-        nextBtn.innerHTML = 'Submitting...';
+        nextBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
 
-        const response = await fetch('/submit', {
+        const response = await fetch('/sites/valentin/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -756,7 +942,7 @@ async function submitData() {
                 successModal.classList.add('show');
             } else {
                 alert('Submitted successfully!');
-                window.location.href = '/';
+                window.location.href = '/sites/valentin/';
             }
         } else {
             const data = await response.json();
