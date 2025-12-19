@@ -4,31 +4,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentin - Matchmaking Results</title>
+    <title>Valentin - Matchmaking Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
-        <h1>Matchmaking Results</h1>
+    <div class="matchmaking-container">
+        <div class="matchmaking-header">
+            <h1>💕 Matchmaking Results</h1>
+            <p>Powered by Hungarian Algorithm + Compatibility Scoring</p>
+        </div>
+
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-number">{{ matches|length * 2 if matches else 0 }}</div>
+                <div class="stat-label">Total Participants</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ matches|length if matches else 0 }}</div>
+                <div class="stat-label">Matches Made</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% if matches %}
+                    {{ "%.0f"|format(matches|map(attribute=2)|list|sum / matches|length if matches|length > 0 else 0)
+                    }}%
+                    {% else %}
+                    0%
+                    {% endif %}
+                </div>
+                <div class="stat-label">Avg Compatibility</div>
+            </div>
+        </div>
+
+        {% if message %}
+        <div class="no-matches">
+            <div class="no-matches-icon">💔</div>
+            <h2>{{ message }}</h2>
+            <p>Share the questionnaire link and check back soon!</p>
+        </div>
+        {% elif matches %}
         <table class="matches-table">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Person A</th>
                     <th>Person B</th>
-                    <th>Compatibility Score</th>
+                    <th>Compatibility</th>
                 </tr>
             </thead>
             <tbody>
                 {% for match in matches %}
                 <tr>
-                    <td>{{ match[0].email }} ({{ match[0].gender }}, Gr: {{ match[0].grade }})</td>
-                    <td>{{ match[1].email }} ({{ match[1].gender }}, Gr: {{ match[1].grade }})</td>
-                    <td>{{ "%.2f"|format(match[2]) }}%</td>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <strong>{{ match[0].email }}</strong><br>
+                        <small>{{ match[0].gender }}, Grade {{ match[0].grade }}, Age {{ match[0].age }}</small>
+                    </td>
+                    <td>
+                        <strong>{{ match[1].email }}</strong><br>
+                        <small>{{ match[1].gender }}, Grade {{ match[1].grade }}, Age {{ match[1].age }}</small>
+                    </td>
+                    <td>
+                        {% set score = match[2] %}
+                        {% if score >= 70 %}
+                        <span class="compatibility-badge compatibility-high">{{ "%.0f"|format(score) }}% 💕</span>
+                        {% elif score >= 40 %}
+                        <span class="compatibility-badge compatibility-medium">{{ "%.0f"|format(score) }}% 💛</span>
+                        {% else %}
+                        <span class="compatibility-badge compatibility-low">{{ "%.0f"|format(score) }}%</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <div class="no-matches">
+            <div class="no-matches-icon">📭</div>
+            <h2>No matches yet</h2>
+            <p>Waiting for participants to complete the questionnaire...</p>
+        </div>
+        {% endif %}
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="window.location.reload()">🔄 Refresh Results</button>
+            <button onclick="window.location.href='/'">🏠 Back to Home</button>
+        </div>
     </div>
 </body>
 
