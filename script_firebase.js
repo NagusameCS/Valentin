@@ -3,6 +3,9 @@
 // Enhanced with floating hearts & better UX
 // ============================================
 
+const VALENTIN_VERSION = '2.5.0';
+console.log('%c💕 Valentin Questionnaire v' + VALENTIN_VERSION + ' (2026-02-12) - No profanity filter', 'color: #ff4d6d; font-weight: bold; font-size: 14px;');
+
 // Firebase Configuration - Valentin Project
 const firebaseConfig = {
     apiKey: "AIzaSyDVFYEp5ILQoL05nb0Y0dkilIHj6cEnbq8",

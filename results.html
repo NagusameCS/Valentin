@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valentin - Results 💕</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>console.log('%c💕 Valentin Results v2.5.0 (2026-02-12) - Friends support', 'color: #ff4d6d; font-weight: bold; font-size: 14px;');</script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -300,7 +301,8 @@
                     if (romanticMatches.length > 0) {
                         html += '<h2>💘 Your Match</h2>';
                         romanticMatches.forEach((match, index) => {
-                            const score = Math.round(match.score);
+                            const rawScore = Math.round(match.score);
+                            const score = rawScore < 70 ? rawScore + 20 : rawScore;
                             const scoreClass = score >= 70 ? 'compat-high' : score >= 40 ? 'compat-med' : 'compat-low';
                             const cupidBadge = match.isManual ? '<span style="background:linear-gradient(135deg,#e91e63,#9c27b0);color:white;padding:2px 8px;border-radius:12px;font-size:0.7rem;margin-left:8px;">💘 Cupid Match</span>' : '';
                             
@@ -338,7 +340,8 @@
                             </div>
                         `;
                         friendMatches.forEach((match, index) => {
-                            const score = Math.round(match.score);
+                            const rawScore = Math.round(match.score);
+                            const score = rawScore < 70 ? rawScore + 20 : rawScore;
                             const scoreClass = score >= 70 ? 'compat-high' : score >= 40 ? 'compat-med' : 'compat-low';
                             
                             html += `

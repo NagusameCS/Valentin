@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valentin Admin - Matchmaking Control 💕</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>console.log('%c💕 Valentin Admin v2.7.0 (2026-02-12) - Friend fallback fix + score display boost', 'color: #ff4d6d; font-weight: bold; font-size: 14px;');</script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -1432,7 +1433,7 @@
             document.getElementById('statMatches').textContent = matches.length;
             
             if (matches.length > 0) {
-                const avg = matches.reduce((sum, m) => sum + m.score, 0) / matches.length;
+                const avg = matches.reduce((sum, m) => sum + (m.score < 70 ? m.score + 20 : m.score), 0) / matches.length;
                 document.getElementById('statAvgScore').textContent = Math.round(avg) + '%';
             } else {
                 document.getElementById('statAvgScore').textContent = '0%';
@@ -1809,7 +1810,7 @@
                     log(`Created ${matches.length} romantic matches`, 'success');
                     
                     if (matches.length > 0) {
-                        const avgScore = matches.reduce((s, m) => s + m.score, 0) / matches.length;
+                        const avgScore = matches.reduce((s, m) => s + (m.score < 70 ? m.score + 20 : m.score), 0) / matches.length;
                         log(`Average compatibility: ${Math.round(avgScore)}%`, 'success');
                     }
                     
@@ -1825,12 +1826,18 @@
                     // Create FRIENDS matches for unmatched people
                     let friendMatches = [];
                     if (unmatchedPeople.length >= 2) {
-                        log(`Finding friends for ${unmatchedPeople.length} unmatched people...`, 'info');
+                        log(`🤝 Finding friends for ${unmatchedPeople.length} unmatched people...`, 'info');
+                        
+                        // Log the unmatched people breakdown
+                        const unmatchedMales = unmatchedPeople.filter(p => p.gender === 'Male').length;
+                        const unmatchedFemales = unmatchedPeople.filter(p => p.gender === 'Female').length;
+                        log(`   Unmatched: ${unmatchedMales} males, ${unmatchedFemales} females`, 'info');
                         
                         // Build compatibility matrix for unmatched people (ignoring gender preference)
                         const fn = unmatchedPeople.length;
                         const friendMatrix = [];
                         const friendDetails = {};
+                        let eligiblePairs = 0;
                         
                         for (let i = 0; i < fn; i++) {
                             friendMatrix[i] = [];
@@ -1840,6 +1847,7 @@
                                 } else if (!isFriendEligible(unmatchedPeople[i], unmatchedPeople[j], params)) {
                                     friendMatrix[i][j] = 1000;
                                 } else {
+                                    eligiblePairs++;
                                     const compat = calculateCompatibility(
                                         unmatchedPeople[i], 
                                         unmatchedPeople[j], 
@@ -1851,8 +1859,11 @@
                             }
                         }
                         
+                        log(`   Found ${eligiblePairs} eligible friend pairs in matrix`, 'info');
+                        
                         // Run Hungarian algorithm for friends
                         const friendAssignments = hungarianAlgorithm(friendMatrix);
+                        log(`   Hungarian returned ${friendAssignments.length} assignments`, 'info');
                         
                         const friendUsed = new Set();
                         friendAssignments.forEach(([i, j]) => {
@@ -1879,10 +1890,14 @@
                         friendMatches.sort((a, b) => b.score - a.score);
                         
                         if (friendMatches.length > 0) {
-                            log(`Created ${friendMatches.length} friend matches! 🤝`, 'success');
+                            log(`✅ Created ${friendMatches.length} friend matches! 🤝`, 'success');
                             // Add friend matches to main matches array
                             matches = [...matches, ...friendMatches];
+                        } else {
+                            log(`⚠️ No friend matches could be created (grade/age constraints too strict)`, 'warning');
                         }
+                    } else if (unmatchedPeople.length === 1) {
+                        log(`⚠️ Only 1 unmatched person - cannot create friend pair`, 'warning');
                     }
                     
                     const totalMatched = matches.filter(m => !m.isFriend).length * 2 + friendMatches.length * 2;
@@ -1909,9 +1924,16 @@
         
         function renderMatches() {
             const panel = document.getElementById('matchesPanel');
-            document.getElementById('matchCount').textContent = `${matches.length} pairs`;
             
-            if (matches.length === 0) {
+            // Separate romantic and friend matches
+            const romanticMatches = matches.filter(m => !m.isFriend && !m.isManual);
+            const cupidMatches = matches.filter(m => m.isManual);
+            const friendMatches = matches.filter(m => m.isFriend);
+            
+            const totalCount = romanticMatches.length + cupidMatches.length + friendMatches.length;
+            document.getElementById('matchCount').textContent = `${totalCount} pairs (${romanticMatches.length} romantic, ${friendMatches.length} friends)`;
+            
+            if (totalCount === 0) {
                 panel.innerHTML = `<div class="empty-state">
                     <div class="icon">💔</div>
                     <p>No matches created</p>
@@ -1920,86 +1942,121 @@
             }
             
             let html = '';
-            matches.forEach((match, idx) => {
-                const isManual = match.isManual;
-                const isFriend = match.isFriend;
-                
-                let cardStyle = '';
-                let badge = '';
-                let heart = '💕';
-                let numberDisplay = idx + 1;
-                
-                if (isManual) {
-                    cardStyle = 'border: 2px solid #e91e63; background: linear-gradient(135deg, #fce4ec, #fff);';
-                    badge = '<span style="font-size:0.7rem;background:#e91e63;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">CUPID</span>';
-                    numberDisplay = '💘';
-                } else if (isFriend) {
-                    cardStyle = 'border: 2px solid #17a2b8; background: linear-gradient(135deg, #e3f2fd, #fff);';
-                    badge = '<span style="font-size:0.7rem;background:#17a2b8;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">FRIEND</span>';
-                    heart = '🤝';
-                    numberDisplay = '🤝';
-                }
-                
-                html += `
-                    <div class="match-card ${isManual ? 'manual-match' : ''} ${isFriend ? 'friend-match' : ''}" onclick="this.classList.toggle('expanded')" style="${cardStyle}">
-                        <div class="match-header">
-                            <div class="match-number">${numberDisplay}</div>
-                            <div class="match-score">${match.score}%${badge}</div>
-                        </div>
-                        <div class="match-people">
-                            <div class="match-person">
-                                <div class="email">${match.person1.display_name || match.person1.email || 'Unknown'}</div>
-                                <div class="details">${match.person1.email} • ${match.person1.gender || '?'} • Grade ${match.person1.grade || '?'}</div>
-                            </div>
-                            <div class="match-heart">${heart}</div>
-                            <div class="match-person">
-                                <div class="email">${match.person2.display_name || match.person2.email || 'Unknown'}</div>
-                                <div class="details">${match.person2.email} • ${match.person2.gender || '?'} • Grade ${match.person2.grade || '?'}</div>
-                            </div>
-                        </div>
-                        <div class="match-breakdown">
-                            ${isManual ? `
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">💘 Manual Cupid Match</span>
-                                <span class="breakdown-value">${match.score}%</span>
-                            </div>
-                            ` : isFriend ? `
-                            <div class="breakdown-row" style="color:#17a2b8;">
-                                <span class="breakdown-label">🤝 Friend Match</span>
-                                <span class="breakdown-value">Matched based on compatibility</span>
-                            </div>
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">✨ Qualities Match</span>
-                                <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
-                            </div>
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">🎵 Lifestyle</span>
-                                <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
-                            </div>
-                            ` : `
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">✨ Qualities Match</span>
-                                <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
-                            </div>
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">🎵 Lifestyle</span>
-                                <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
-                            </div>
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">🎭 Personality</span>
-                                <span class="breakdown-value">${match.breakdown?.personality || 0}%</span>
-                            </div>
-                            <div class="breakdown-row">
-                                <span class="breakdown-label">💑 Preferences</span>
-                                <span class="breakdown-value">${match.breakdown?.preferences || 0}%</span>
-                            </div>
-                            `}
-                        </div>
-                    </div>
-                `;
-            });
+            
+            // Cupid matches section
+            if (cupidMatches.length > 0) {
+                html += `<div style="background:linear-gradient(135deg,#fce4ec,#f8bbd9);padding:15px 20px;border-radius:12px;margin-bottom:15px;text-align:center;">
+                    <h3 style="color:#c2185b;margin:0;">💘 Cupid Matches (${cupidMatches.length})</h3>
+                </div>`;
+                cupidMatches.forEach((match, idx) => {
+                    html += renderMatchCard(match, idx + 1);
+                });
+            }
+            
+            // Romantic matches section
+            if (romanticMatches.length > 0) {
+                html += `<div style="background:linear-gradient(135deg,#ffe0e6,#ffccd5);padding:15px 20px;border-radius:12px;margin-bottom:15px;text-align:center;">
+                    <h3 style="color:#c9184a;margin:0;">💕 Romantic Matches (${romanticMatches.length})</h3>
+                </div>`;
+                romanticMatches.forEach((match, idx) => {
+                    html += renderMatchCard(match, idx + 1);
+                });
+            }
+            
+            // Friends section
+            if (friendMatches.length > 0) {
+                html += `<div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);padding:15px 20px;border-radius:12px;margin:20px 0 15px 0;text-align:center;">
+                    <h3 style="color:#1976d2;margin:0;">🤝 Friend Matches (${friendMatches.length})</h3>
+                    <p style="color:#555;font-size:0.85rem;margin:5px 0 0 0;">Paired based on compatibility (no romantic match available)</p>
+                </div>`;
+                friendMatches.forEach((match, idx) => {
+                    html += renderMatchCard(match, idx + 1);
+                });
+            }
             
             panel.innerHTML = html;
+        }
+        
+        function renderMatchCard(match, idx) {
+            const isManual = match.isManual;
+            const isFriend = match.isFriend;
+            
+            // Secret score boost for display
+            const displayScore = match.score < 70 ? match.score + 20 : match.score;
+            
+            let cardStyle = '';
+            let badge = '';
+            let heart = '💕';
+            let numberDisplay = idx;
+            
+            if (isManual) {
+                cardStyle = 'border: 2px solid #e91e63; background: linear-gradient(135deg, #fce4ec, #fff);';
+                badge = '<span style="font-size:0.7rem;background:#e91e63;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">CUPID</span>';
+                numberDisplay = '💘';
+            } else if (isFriend) {
+                cardStyle = 'border: 2px solid #17a2b8; background: linear-gradient(135deg, #e3f2fd, #fff);';
+                badge = '<span style="font-size:0.7rem;background:#17a2b8;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">FRIEND</span>';
+                heart = '🤝';
+                numberDisplay = '🤝';
+            }
+            
+            return `
+                <div class="match-card ${isManual ? 'manual-match' : ''} ${isFriend ? 'friend-match' : ''}" onclick="this.classList.toggle('expanded')" style="${cardStyle}">
+                    <div class="match-header">
+                        <div class="match-number">${numberDisplay}</div>
+                        <div class="match-score">${displayScore}%${badge}</div>
+                    </div>
+                    <div class="match-people">
+                        <div class="match-person">
+                            <div class="email">${match.person1.display_name || match.person1.email || 'Unknown'}</div>
+                            <div class="details">${match.person1.email} • ${match.person1.gender || '?'} • Grade ${match.person1.grade || '?'}</div>
+                        </div>
+                        <div class="match-heart">${heart}</div>
+                        <div class="match-person">
+                            <div class="email">${match.person2.display_name || match.person2.email || 'Unknown'}</div>
+                            <div class="details">${match.person2.email} • ${match.person2.gender || '?'} • Grade ${match.person2.grade || '?'}</div>
+                        </div>
+                    </div>
+                    <div class="match-breakdown">
+                        ${isManual ? `
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">💘 Manual Cupid Match</span>
+                            <span class="breakdown-value">${displayScore}%</span>
+                        </div>
+                        ` : isFriend ? `
+                        <div class="breakdown-row" style="color:#17a2b8;">
+                            <span class="breakdown-label">🤝 Friend Match</span>
+                            <span class="breakdown-value">Matched based on compatibility</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">✨ Qualities Match</span>
+                            <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">🎵 Lifestyle</span>
+                            <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
+                        </div>
+                        ` : `
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">✨ Qualities Match</span>
+                            <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">🎵 Lifestyle</span>
+                            <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">🎭 Personality</span>
+                            <span class="breakdown-value">${match.breakdown?.personality || 0}%</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">💑 Preferences</span>
+                            <span class="breakdown-value">${match.breakdown?.preferences || 0}%</span>
+                        </div>
+                        `}
+                    </div>
+                </div>
+            `;
         }
         
         // ============================================
@@ -2773,8 +2830,66 @@
                     const autoMatches = matches.length - manualMatches.length;
                     log(`Created ${autoMatches} auto matches + ${manualMatches.length} manual Cupid matches = ${matches.length} total`, 'success');
                     
+                    // ========== FRIENDS FALLBACK ==========
+                    const matchedIds = new Set();
+                    matches.forEach(m => {
+                        matchedIds.add(m.person1.id);
+                        matchedIds.add(m.person2.id);
+                    });
+                    
+                    const unmatchedPeople = eligibleSubmissions.filter(s => !matchedIds.has(s.id));
+                    log(`Finding friends for ${unmatchedPeople.length} unmatched people...`, 'info');
+                    
+                    if (unmatchedPeople.length >= 2) {
+                        const friendMatches = [];
+                        const friendUsed = new Set();
+                        
+                        // Build friend compatibility matrix
+                        const friendScores = [];
+                        for (let i = 0; i < unmatchedPeople.length; i++) {
+                            for (let j = i + 1; j < unmatchedPeople.length; j++) {
+                                if (!isFriendEligible(unmatchedPeople[i], unmatchedPeople[j], params)) {
+                                    continue;
+                                }
+                                
+                                // Calculate friend score (qualities + lifestyle only)
+                                const qScore = calculateQualitiesScore(unmatchedPeople[i], unmatchedPeople[j]);
+                                const lScore = calculateLifestyleScore(unmatchedPeople[i], unmatchedPeople[j]);
+                                const friendScore = Math.round((qScore * 0.5) + (lScore * 0.5));
+                                
+                                friendScores.push({
+                                    i, j,
+                                    person1: unmatchedPeople[i],
+                                    person2: unmatchedPeople[j],
+                                    score: friendScore,
+                                    breakdown: { qualities: Math.round(qScore), lifestyle: Math.round(lScore) }
+                                });
+                            }
+                        }
+                        
+                        // Sort by score and greedily match
+                        friendScores.sort((a, b) => b.score - a.score);
+                        
+                        for (const fs of friendScores) {
+                            if (!friendUsed.has(fs.i) && !friendUsed.has(fs.j)) {
+                                friendMatches.push({
+                                    person1: fs.person1,
+                                    person2: fs.person2,
+                                    score: fs.score,
+                                    breakdown: fs.breakdown,
+                                    isFriend: true
+                                });
+                                friendUsed.add(fs.i);
+                                friendUsed.add(fs.j);
+                            }
+                        }
+                        
+                        log(`Created ${friendMatches.length} friend matches`, 'success');
+                        matches = matches.concat(friendMatches);
+                    }
+                    
                     if (matches.length > 0) {
-                        const avgScore = matches.reduce((s, m) => s + m.score, 0) / matches.length;
+                        const avgScore = matches.reduce((s, m) => s + (m.score < 70 ? m.score + 20 : m.score), 0) / matches.length;
                         log(`Average compatibility: ${Math.round(avgScore)}%`, 'success');
                     }
                     
