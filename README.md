@@ -38,6 +38,18 @@ A fun Valentine's Day matchmaking website with an interactive questionnaire that
 - Express.js backend
 - Hungarian algorithm for optimal matching
 
+## 📊 Project Stats
+
+| Language   | Files | Blank | Comment | Code  |
+|------------|-------|-------|---------|-------|
+| JavaScript | 6     | 1,015 | 394     | 5,717 |
+| HTML       | 9     | 700   | 37      | 4,997 |
+| CSS        | 2     | 207   | 32      | 1,499 |
+| Python     | 5     | 111   | 79      | 545   |
+| Markdown   | 2     | 53    | 0       | 155   |
+| Other      | 7     | 30    | 0       | 132   |
+| **Total**  | **31**| **2,116** | **542** | **13,045** |
+
 ---
 
-Made with ❤️ for Valentine's Day 2025
+Made with ❤️ for Valentine's Day 2026
