@@ -86,6 +86,13 @@ function createFloatingHearts() {
 const questions = [
     // Basic Info (always first)
     {
+        id: "display_name",
+        type: "name",
+        emoji: "✨",
+        question: "What should we call you?",
+        placeholder: "Enter your name"
+    },
+    {
         id: "gender",
         type: "select",
         emoji: "👤",
@@ -492,7 +499,7 @@ async function showResultsPage() {
                     <div style="background:linear-gradient(135deg,#fff5f7,#fff);border-radius:16px;padding:25px;margin-bottom:15px;border:2px solid #ffe0e6;text-align:center;">
                         <div style="font-size:4rem;margin-bottom:15px;">💕</div>
                         <div style="font-size:1.5rem;font-weight:700;color:#ff4d6d;margin-bottom:5px;">
-                            ${matchPerson?.email?.split('@')[0] || 'Your Match'}
+                            ${matchPerson?.display_name || matchPerson?.email?.split('@')[0] || 'Your Match'}
                         </div>
                         <div style="color:#666;font-size:1rem;margin-bottom:15px;">
                             ${matchPerson?.email || ''}
@@ -813,6 +820,7 @@ function renderQuestion() {
     
     // Render based on type
     const renderers = {
+        'name': renderName,
         'select': renderSelect,
         'number': renderNumber,
         'slider': renderSlider,
@@ -838,6 +846,86 @@ function renderQuestion() {
 // ============================================
 // QUESTION TYPE RENDERERS
 // ============================================
+
+function renderName(q) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'name-input-wrapper animate-in';
+    wrapper.style.cssText = 'max-width: 400px; margin: 0 auto; text-align: center;';
+    
+    const currentValue = answers[q.id] || '';
+    
+    wrapper.innerHTML = `
+        <div style="background: #fff; border: 3px solid #ffe0e6; border-radius: 20px; padding: 30px; transition: all 0.3s ease;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">💝</div>
+            <input type="text" id="name_input" 
+                placeholder="${q.placeholder || 'Enter your name'}"
+                value="${currentValue}"
+                maxlength="30"
+                style="width: 100%; padding: 15px 20px; border: none; font-size: 1.3rem; text-align: center; outline: none; background: transparent; color: #333; font-weight: 500;">
+            <div id="name_error" style="color: #dc3545; font-size: 0.85rem; margin-top: 10px; min-height: 20px;"></div>
+            <p style="color: #999; font-size: 0.8rem; margin-top: 15px;">
+                ✨ This is how your match will see you!
+            </p>
+        </div>
+    `;
+    
+    container.appendChild(wrapper);
+    
+    const input = document.getElementById('name_input');
+    const errorDiv = document.getElementById('name_error');
+    const parentDiv = input.closest('div[style*="background: #fff"]');
+    
+    input.addEventListener('input', (e) => {
+        // Only allow English letters, spaces, hyphens, and apostrophes
+        let val = e.target.value.replace(/[^a-zA-Z\s\-']/g, '');
+        
+        // Limit consecutive spaces
+        val = val.replace(/\s+/g, ' ');
+        
+        // Capitalize first letter of each word
+        val = val.replace(/\b\w/g, c => c.toUpperCase());
+        
+        e.target.value = val;
+        
+        // Simple length validation only
+        if (val.trim().length < 2) {
+            errorDiv.textContent = val.trim().length > 0 ? '⚠️ Name must be at least 2 characters' : '';
+            parentDiv.style.borderColor = '#ffe0e6';
+            answers[q.id] = undefined;
+        } else if (val.trim().length > 25) {
+            errorDiv.textContent = '⚠️ Name is too long';
+            parentDiv.style.borderColor = '#ffc107';
+            answers[q.id] = undefined;
+        } else {
+            errorDiv.textContent = '';
+            parentDiv.style.borderColor = '#28a745';
+            answers[q.id] = val.trim();
+        }
+    });
+    
+    // Focus styling
+    input.addEventListener('focus', () => {
+        if (input.value.trim().length >= 2) {
+            parentDiv.style.borderColor = '#ff4d6d';
+        }
+        parentDiv.style.boxShadow = '0 8px 30px rgba(255, 77, 109, 0.2)';
+    });
+    
+    input.addEventListener('blur', () => {
+        const val = input.value.trim();
+        if (val.length >= 2) {
+            parentDiv.style.borderColor = '#28a745';
+        } else {
+            parentDiv.style.borderColor = '#ffe0e6';
+        }
+        parentDiv.style.boxShadow = 'none';
+    });
+    
+    // Trigger validation if there's an existing value
+    if (currentValue) {
+        input.dispatchEvent(new Event('input'));
+    }
+}
 
 function renderSelect(q) {
     const wrapper = document.createElement('div');

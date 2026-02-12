@@ -293,32 +293,76 @@
                 `;
                 
                 if (matches && matches.length > 0) {
-                    html += '<h2>💘 Your Matches</h2>';
-                    matches.forEach((match, index) => {
-                        const score = Math.round(match.score);
-                        const scoreClass = score >= 70 ? 'compat-high' : score >= 40 ? 'compat-med' : 'compat-low';
-                        
+                    // Separate romantic and friend matches
+                    const romanticMatches = matches.filter(m => !m.isFriend);
+                    const friendMatches = matches.filter(m => m.isFriend);
+                    
+                    if (romanticMatches.length > 0) {
+                        html += '<h2>💘 Your Match</h2>';
+                        romanticMatches.forEach((match, index) => {
+                            const score = Math.round(match.score);
+                            const scoreClass = score >= 70 ? 'compat-high' : score >= 40 ? 'compat-med' : 'compat-low';
+                            const cupidBadge = match.isManual ? '<span style="background:linear-gradient(135deg,#e91e63,#9c27b0);color:white;padding:2px 8px;border-radius:12px;font-size:0.7rem;margin-left:8px;">💘 Cupid Match</span>' : '';
+                            
+                            html += `
+                                <div class="match-card">
+                                    <div class="match-rank">${index + 1}${cupidBadge}</div>
+                                    <div class="match-people">
+                                        <div class="person">
+                                            <div class="person-email">${match.person1.display_name || match.person1.email.split('@')[0]}@...</div>
+                                            <div class="person-details">${match.person1.gender || ''} • Grade ${match.person1.grade || 'N/A'} • Age ${match.person1.age || 'N/A'}</div>
+                                        </div>
+                                        <div class="match-heart">💕</div>
+                                        <div class="person">
+                                            <div class="person-email">${match.person2.display_name || match.person2.email.split('@')[0]}@...</div>
+                                            <div class="person-details">${match.person2.gender || ''} • Grade ${match.person2.grade || 'N/A'} • Age ${match.person2.age || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="compatibility">
+                                        <div class="compat-score ${scoreClass}">${score}%</div>
+                                        <div class="compat-label">compatibility</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    if (friendMatches.length > 0) {
                         html += `
-                            <div class="match-card">
-                                <div class="match-rank">${index + 1}</div>
-                                <div class="match-people">
-                                    <div class="person">
-                                        <div class="person-email">${match.person1.email.split('@')[0]}@...</div>
-                                        <div class="person-details">${match.person1.gender || ''} • Grade ${match.person1.grade || 'N/A'} • Age ${match.person1.age || 'N/A'}</div>
-                                    </div>
-                                    <div class="match-heart">💕</div>
-                                    <div class="person">
-                                        <div class="person-email">${match.person2.email.split('@')[0]}@...</div>
-                                        <div class="person-details">${match.person2.gender || ''} • Grade ${match.person2.grade || 'N/A'} • Age ${match.person2.age || 'N/A'}</div>
-                                    </div>
-                                </div>
-                                <div class="compatibility">
-                                    <div class="compat-score ${scoreClass}">${score}%</div>
-                                    <div class="compat-label">compatibility</div>
-                                </div>
+                            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 16px; text-align: center;">
+                                <h2 style="color: #1976d2; margin-bottom: 10px;">🤝 Your Perfect Friend</h2>
+                                <p style="color: #555; font-size: 0.9rem; margin-bottom: 20px;">
+                                    We couldn't find a romantic match based on everyone's preferences, but we found someone amazing who shares your interests and vibes! 
+                                    Great friendships can be just as meaningful. 💙
+                                </p>
                             </div>
                         `;
-                    });
+                        friendMatches.forEach((match, index) => {
+                            const score = Math.round(match.score);
+                            const scoreClass = score >= 70 ? 'compat-high' : score >= 40 ? 'compat-med' : 'compat-low';
+                            
+                            html += `
+                                <div class="match-card" style="border: 2px solid #17a2b8; background: linear-gradient(135deg, #e3f2fd, #fff);">
+                                    <div class="match-rank">🤝<span style="background:#17a2b8;color:white;padding:2px 8px;border-radius:12px;font-size:0.7rem;margin-left:8px;">FRIEND</span></div>
+                                    <div class="match-people">
+                                        <div class="person">
+                                            <div class="person-email">${match.person1.display_name || match.person1.email.split('@')[0]}@...</div>
+                                            <div class="person-details">${match.person1.gender || ''} • Grade ${match.person1.grade || 'N/A'} • Age ${match.person1.age || 'N/A'}</div>
+                                        </div>
+                                        <div class="match-heart">🤝</div>
+                                        <div class="person">
+                                            <div class="person-email">${match.person2.display_name || match.person2.email.split('@')[0]}@...</div>
+                                            <div class="person-details">${match.person2.gender || ''} • Grade ${match.person2.grade || 'N/A'} • Age ${match.person2.age || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="compatibility">
+                                        <div class="compat-score ${scoreClass}">${score}%</div>
+                                        <div class="compat-label">friendship compatibility</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
                 } else {
                     html += `
                         <div class="no-matches">

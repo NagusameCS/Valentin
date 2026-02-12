@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{Valentin Compatibility Algorithm}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Overview}
+This document describes the Valentin compatibility algorithm used to compute pairwise scores and then form an optimal matching. The algorithm combines four sub-scores (qualities, lifestyle, personality, and preferences), normalizes them to a common $[0,100]$ scale, and then aggregates them with configurable weights. A Hungarian algorithm is then used to compute the optimal matching using the resulting pairwise scores.
+
+\section{Design Philosophy}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Symmetry:} Compatibility should be symmetric in $A$ and $B$. Each sub-score is computed to be symmetric or is averaged across both users.
+    \item \textbf{Interpretability:} Each sub-score has a clear semantic interpretation and a transparent computation for auditing.
+    \item \textbf{Normalization:} All sub-scores are mapped to $[0,100]$ for consistent aggregation.
+    \item \textbf{Fair Aggregation:} Weighted averaging allows the system to emphasize or de-emphasize dimensions without changing scale.
+    \item \textbf{Robustness to Missing Data:} When a sub-score cannot be computed (missing fields), it defaults to a neutral value (typically $50$).
+    \item \textbf{Optimal Global Pairing:} The final pairing is not greedy. It is globally optimized using the Hungarian algorithm.
+\end{itemize}
+
+\section{Notation}
+Let $A$ and $B$ denote two participants. Let $w_q, w_l, w_p, w_r$ be the weights for qualities, lifestyle, personality, and preferences, respectively. Let each sub-score be in $[0,100]$.
+
+\section{Sub-Scores}
+\subsection{Qualities Score}
+Participants list three qualities they \emph{want} and three qualities they \emph{have}. The score measures reciprocal fulfillment.
+
+Let $W_A$ be the set of qualities $A$ wants, and $H_A$ the set of qualities $A$ has. Then:
+\[
+S_q(A,B) = \frac{|W_A \cap H_B| + |W_B \cap H_A|}{6} \times 100.
+\]
+
+\paragraph{Philosophy:} This rewards mutual alignment between what each person seeks and what the other offers.
+
+\subsection{Lifestyle Score}
+Lifestyle compares categorical and binary responses.
+
+\paragraph{Categorical items} (6 total):
+\texttt{love\_language}, \texttt{music\_genre}, \texttt{favorite\_subject}, \texttt{favorite\_season}, \texttt{ice\_cream}, \texttt{city\_or\_country}
+
+Each match contributes $10$ points. Maximum categorical score: $60$.
+
+\paragraph{Binary items} (2 total):
+\texttt{text\_or\_call}, \texttt{home\_or\_out}
+
+Each match contributes $15$ points. Maximum binary score: $30$.
+
+Let $M$ be total matched points and $M_{\max}$ the maximum possible given available answers.
+\[
+S_l(A,B) = \begin{cases}
+\frac{M}{M_{\max}} \times 100, & M_{\max} > 0 \\
+50, & M_{\max} = 0
+\end{cases}
+\]
+
+\paragraph{Philosophy:} Shared tastes and habits increase day-to-day compatibility; the weighting reflects higher impact for binary life-style choices.
+
+\subsection{Personality Score}
+Personality is based on similarity in three numeric traits:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Extrovert scale} (0--100)
+    \item \textbf{Social battery} (1--5)
+    \item \textbf{Sleep time} (0--24)
+\end{itemize}
+
+For each trait, we compute a similarity score and average:
+\[
+S_p(A,B) = \frac{1}{n} \sum_{i=1}^{n} \max(0, 100 - d_i),
+\]
+where $d_i$ is the scaled absolute difference for that trait:
+\[
+\begin{aligned}
+&d_{\text{ext}} = |\text{ext}_A - \text{ext}_B|, \\
+&d_{\text{soc}} = 20 \cdot |\text{soc}_A - \text{soc}_B|, \\
+&d_{\text{sleep}} = 10 \cdot |\text{sleep}_A - \text{sleep}_B|.
+\end{aligned}
+\]
+If no traits are available, $S_p(A,B)=50$.
+
+\paragraph{Philosophy:} Similar rhythms and social energy reduce friction in daily interaction.
+
+\subsection{Preferences Score}
+Two preference features are used:
+
+\paragraph{Date ideas ranking} uses Spearman correlation.
+Let $\rho \in [-1,1]$ be Spearman's rho between the ranked lists of shared date ideas. Then:
+\[
+S_{\text{date}} = (\rho + 1) \times 50.
+\]
+
+\paragraph{Favorite color} uses simple equality:
+\[
+S_{\text{color}} = \begin{cases}100, & \text{if colors match} \\ 30, & \text{if both specified but differ}\end{cases}
+\]
+
+The preference score is the average of available preference components:
+\[
+S_r(A,B) = \frac{S_{\text{date}} + S_{\text{color}}}{k},
+\]
+where $k$ is the number of available preference components, or $S_r=50$ if none are available.
+
+\paragraph{Philosophy:} Shared activities and aesthetic preferences reflect low-friction shared experiences.
+
+\section{Compatibility Aggregation}
+Let $S_q, S_l, S_p, S_r$ be the sub-scores and weights $w_q, w_l, w_p, w_r$.
+\[
+S(A,B) = \frac{w_q S_q + w_l S_l + w_p S_p + w_r S_r}{w_q + w_l + w_p + w_r}.
+\]
+
+If $w_q + w_l + w_p + w_r = 0$, then $S(A,B) = 50$.
+
+\section{Matching}
+Pairwise compatibility scores are converted into a cost matrix for global matching. The Hungarian algorithm minimizes total cost, which is computed as:
+\[
+C(A,B) = 100 - S(A,B).
+\]
+This yields an optimal one-to-one matching that maximizes total compatibility.
+
+\section{Master Equation}
+Let $S_q, S_l, S_p, S_r$ be the sub-scores defined above. The master compatibility equation is:
+\[
+\boxed{\displaystyle S(A,B) = \frac{w_q S_q(A,B) + w_l S_l(A,B) + w_p S_p(A,B) + w_r S_r(A,B)}{w_q + w_l + w_p + w_r}}
+\]
+
+\end{document}

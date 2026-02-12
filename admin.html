@@ -556,6 +556,176 @@
             z-index: 1000;
         }
         
+        /* Cupid Modal */
+        .cupid-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .cupid-modal.active { display: flex; }
+        
+        .cupid-box {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 700px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        }
+        
+        .cupid-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .cupid-header h2 {
+            color: var(--primary-pink);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .cupid-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .cupid-search {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .cupid-search input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ffe0e6;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .cupid-search input:focus {
+            border-color: var(--primary-pink);
+        }
+        
+        .cupid-person {
+            background: var(--light-pink);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .cupid-person h4 {
+            color: var(--primary-pink);
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .cupid-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        .cupid-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cupid-result-item:hover {
+            background: #fff5f7;
+        }
+        
+        .cupid-result-item.selected {
+            background: linear-gradient(135deg, #ffe0e6, #ffd6e0);
+            font-weight: 600;
+        }
+        
+        .cupid-result-item .email {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .cupid-result-item .details {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .cupid-selected {
+            background: linear-gradient(135deg, #fff5f7, #fff);
+            border: 2px solid var(--primary-pink);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .cupid-selected.has-selection {
+            display: block;
+        }
+        
+        .cupid-score-section {
+            background: var(--light-pink);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .cupid-score-section label {
+            display: block;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .cupid-score-section input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .cupid-score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+        }
+        
+        .cupid-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        .cupid-warning {
+            background: #fff3cd;
+            border: 1px solid #f0c36d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            color: #856404;
+            font-size: 0.9rem;
+        }
+        
         .toast.show {
             transform: translateY(0);
             opacity: 1;
@@ -817,11 +987,14 @@
             <h1>💕 Valentin Matchmaking Admin</h1>
             <div class="header-actions">
                 <button class="btn btn-success" id="toggleResultsBtn" onclick="toggleResults()">👁️ Show Results</button>
+                <button class="btn" style="background:linear-gradient(135deg,#e91e63,#9c27b0);color:white;" onclick="openCupidModal()">💘 Cupid (<span id="cupidCount">0</span>)</button>
+                <button class="btn" style="background:linear-gradient(135deg,#c62828,#b71c1c);color:white;" onclick="openAntiCupidModal()">💔 Anti-Cupid (<span id="antiCupidCount">0</span>)</button>
                 <button class="btn btn-warning" onclick="generateGhosts()">👻 Generate 500 Ghosts</button>
                 <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh Data</button>
                 <button class="btn btn-secondary" onclick="downloadData()">📥 Download JSON</button>
                 <button class="btn btn-secondary" onclick="exportMatches()">📄 Export Matches</button>
                 <button class="btn btn-primary" onclick="runMatchmaking()">💕 Run Matchmaking</button>
+                <button class="btn" style="background:linear-gradient(135deg,#17a2b8,#138496);color:white;" onclick="saveMatchesToServer()">💾 Save to Server</button>
             </div>
         </div>
         
@@ -967,6 +1140,103 @@
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
                 <button class="btn btn-danger" id="confirmBtn" onclick="confirmAction()">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cupid Modal -->
+    <div class="cupid-modal" id="cupidModal">
+        <div class="cupid-box">
+            <div class="cupid-header">
+                <h2>💘 Cupid Mode</h2>
+                <p>Manually pair two people with a custom compatibility score</p>
+            </div>
+            
+            <!-- Person 1 -->
+            <div class="cupid-person">
+                <h4>👤 Person 1</h4>
+                <div class="cupid-search">
+                    <input type="text" id="cupidSearch1" placeholder="Search by email or name..." oninput="searchCupid(1)">
+                </div>
+                <div class="cupid-results" id="cupidResults1"></div>
+                <div class="cupid-selected" id="cupidSelected1"></div>
+            </div>
+            
+            <!-- Person 2 -->
+            <div class="cupid-person">
+                <h4>👤 Person 2</h4>
+                <div class="cupid-search">
+                    <input type="text" id="cupidSearch2" placeholder="Search by email or name..." oninput="searchCupid(2)">
+                </div>
+                <div class="cupid-results" id="cupidResults2"></div>
+                <div class="cupid-selected" id="cupidSelected2"></div>
+            </div>
+            
+            <!-- Compatibility Score -->
+            <div class="cupid-score-section">
+                <label>💯 Manual Compatibility Score</label>
+                <input type="range" id="cupidScore" min="1" max="100" value="85" oninput="updateCupidScore()">
+                <div class="cupid-score-value" id="cupidScoreValue">85%</div>
+            </div>
+            
+            <div class="cupid-warning">
+                ⚠️ Manual pairs are <strong>locked</strong> - these people will NOT be paired with anyone else during automatic matchmaking
+            </div>
+            
+            <div class="cupid-actions">
+                <button class="btn btn-secondary" onclick="closeCupidModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createCupidMatch()" id="cupidCreateBtn" disabled>💘 Create Match</button>
+            </div>
+            
+            <!-- Existing Manual Matches -->
+            <div id="cupidExistingSection" style="margin-top: 30px; border-top: 2px dashed #ffe0e6; padding-top: 25px; display: none;">
+                <h4 style="color: #e91e63; margin-bottom: 15px; text-align: center;">💘 Existing Cupid Matches</h4>
+                <div id="cupidExistingList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Anti-Cupid Modal -->
+    <div class="cupid-modal" id="antiCupidModal">
+        <div class="cupid-box">
+            <div class="cupid-header">
+                <h2>💔 Anti-Cupid Mode</h2>
+                <p>Block two people from ever being matched together</p>
+            </div>
+            
+            <!-- Person 1 -->
+            <div class="cupid-person" style="background: #fff0f0;">
+                <h4>👤 Person 1</h4>
+                <div class="cupid-search">
+                    <input type="text" id="antiCupidSearch1" placeholder="Search by email or name..." oninput="searchAntiCupid(1)">
+                </div>
+                <div class="cupid-results" id="antiCupidResults1"></div>
+                <div class="cupid-selected" id="antiCupidSelected1"></div>
+            </div>
+            
+            <!-- Person 2 -->
+            <div class="cupid-person" style="background: #fff0f0;">
+                <h4>👤 Person 2</h4>
+                <div class="cupid-search">
+                    <input type="text" id="antiCupidSearch2" placeholder="Search by email or name..." oninput="searchAntiCupid(2)">
+                </div>
+                <div class="cupid-results" id="antiCupidResults2"></div>
+                <div class="cupid-selected" id="antiCupidSelected2"></div>
+            </div>
+            
+            <div class="cupid-warning" style="background: #ffebee; border-color: #ef9a9a; color: #c62828;">
+                🚫 These two people will <strong>NEVER</strong> be paired together during automatic matchmaking
+            </div>
+            
+            <div class="cupid-actions">
+                <button class="btn btn-secondary" onclick="closeAntiCupidModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="createAntiCupidBlock()" id="antiCupidCreateBtn" disabled>💔 Block Pairing</button>
+            </div>
+            
+            <!-- Existing Blocks -->
+            <div id="antiCupidExistingSection" style="margin-top: 30px; border-top: 2px dashed #ffcdd2; padding-top: 25px; display: none;">
+                <h4 style="color: #c62828; margin-bottom: 15px; text-align: center;">💔 Existing Blocked Pairs</h4>
+                <div id="antiCupidExistingList"></div>
             </div>
         </div>
     </div>
@@ -1142,6 +1412,9 @@
                 hideLoading();
                 showToast(`Loaded ${submissions.length} submissions`, 'success');
                 
+                // Load Cupid/Anti-Cupid data from server
+                await loadCupidData();
+                
             } catch (error) {
                 log(`Error loading data: ${error.message}`, 'error');
                 hideLoading();
@@ -1242,6 +1515,22 @@
             // Age gap check
             const ageGap = Math.abs((a.age || 16) - (b.age || 16));
             if (params.maxAgeGap < 3 && ageGap > params.maxAgeGap) return false;
+            
+            return true;
+        }
+        
+        // Friends eligibility - only checks grade/age, ignores gender preference
+        function isFriendEligible(a, b, params) {
+            // Can't match with self
+            if (a.id === b.id) return false;
+            
+            // Grade gap check (relaxed for friends - allow +1 extra gap)
+            const gradeGap = Math.abs((a.grade || 10) - (b.grade || 10));
+            if (gradeGap > Math.max(params.maxGradeGap + 1, 2)) return false;
+            
+            // Age gap check (relaxed for friends - allow +1 extra gap)
+            const ageGap = Math.abs((a.age || 16) - (b.age || 16));
+            if (ageGap > Math.max(params.maxAgeGap + 1, 2)) return false;
             
             return true;
         }
@@ -1517,22 +1806,98 @@
                     // Sort by score descending
                     matches.sort((a, b) => b.score - a.score);
                     
-                    log(`Created ${matches.length} matches`, 'success');
+                    log(`Created ${matches.length} romantic matches`, 'success');
                     
                     if (matches.length > 0) {
                         const avgScore = matches.reduce((s, m) => s + m.score, 0) / matches.length;
                         log(`Average compatibility: ${Math.round(avgScore)}%`, 'success');
                     }
                     
-                    const unmatched = n - (matches.length * 2);
-                    if (unmatched > 0) {
-                        log(`${unmatched} people could not be matched (eligibility constraints)`, 'warning');
+                    // Find unmatched people
+                    const matchedEmails = new Set();
+                    matches.forEach(m => {
+                        matchedEmails.add(m.person1.email);
+                        matchedEmails.add(m.person2.email);
+                    });
+                    
+                    const unmatchedPeople = submissions.filter(s => !matchedEmails.has(s.email));
+                    
+                    // Create FRIENDS matches for unmatched people
+                    let friendMatches = [];
+                    if (unmatchedPeople.length >= 2) {
+                        log(`Finding friends for ${unmatchedPeople.length} unmatched people...`, 'info');
+                        
+                        // Build compatibility matrix for unmatched people (ignoring gender preference)
+                        const fn = unmatchedPeople.length;
+                        const friendMatrix = [];
+                        const friendDetails = {};
+                        
+                        for (let i = 0; i < fn; i++) {
+                            friendMatrix[i] = [];
+                            for (let j = 0; j < fn; j++) {
+                                if (i === j) {
+                                    friendMatrix[i][j] = 1000;
+                                } else if (!isFriendEligible(unmatchedPeople[i], unmatchedPeople[j], params)) {
+                                    friendMatrix[i][j] = 1000;
+                                } else {
+                                    const compat = calculateCompatibility(
+                                        unmatchedPeople[i], 
+                                        unmatchedPeople[j], 
+                                        params.weights
+                                    );
+                                    friendMatrix[i][j] = 100 - compat.total;
+                                    friendDetails[`${i}-${j}`] = compat;
+                                }
+                            }
+                        }
+                        
+                        // Run Hungarian algorithm for friends
+                        const friendAssignments = hungarianAlgorithm(friendMatrix);
+                        
+                        const friendUsed = new Set();
+                        friendAssignments.forEach(([i, j]) => {
+                            if (!friendUsed.has(i) && !friendUsed.has(j) && friendMatrix[i][j] < 1000) {
+                                const key = `${i}-${j}`;
+                                const keyReverse = `${j}-${i}`;
+                                const details = friendDetails[key] || friendDetails[keyReverse];
+                                
+                                if (details) {
+                                    friendMatches.push({
+                                        person1: unmatchedPeople[i],
+                                        person2: unmatchedPeople[j],
+                                        score: details.total,
+                                        breakdown: details.breakdown,
+                                        isFriend: true // Mark as friend match
+                                    });
+                                    friendUsed.add(i);
+                                    friendUsed.add(j);
+                                }
+                            }
+                        });
+                        
+                        // Sort friends by score
+                        friendMatches.sort((a, b) => b.score - a.score);
+                        
+                        if (friendMatches.length > 0) {
+                            log(`Created ${friendMatches.length} friend matches! 🤝`, 'success');
+                            // Add friend matches to main matches array
+                            matches = [...matches, ...friendMatches];
+                        }
+                    }
+                    
+                    const totalMatched = matches.filter(m => !m.isFriend).length * 2 + friendMatches.length * 2;
+                    const stillUnmatched = n - totalMatched;
+                    if (stillUnmatched > 0) {
+                        log(`${stillUnmatched} people could not be matched at all`, 'warning');
                     }
                     
                     updateStats();
                     renderMatches();
                     hideLoading();
-                    showToast(`Created ${matches.length} matches!`, 'success');
+                    
+                    const romanticCount = matches.filter(m => !m.isFriend).length;
+                    const friendCount = friendMatches.length;
+                    showToast(`Created ${romanticCount} romantic + ${friendCount} friend matches!`, 'success');
                     
                 } catch (error) {
                     log(`Error: ${error.message}`, 'error');
@@ -1556,24 +1921,62 @@
             
             let html = '';
             matches.forEach((match, idx) => {
+                const isManual = match.isManual;
+                const isFriend = match.isFriend;
+                
+                let cardStyle = '';
+                let badge = '';
+                let heart = '💕';
+                let numberDisplay = idx + 1;
+                
+                if (isManual) {
+                    cardStyle = 'border: 2px solid #e91e63; background: linear-gradient(135deg, #fce4ec, #fff);';
+                    badge = '<span style="font-size:0.7rem;background:#e91e63;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">CUPID</span>';
+                    numberDisplay = '💘';
+                } else if (isFriend) {
+                    cardStyle = 'border: 2px solid #17a2b8; background: linear-gradient(135deg, #e3f2fd, #fff);';
+                    badge = '<span style="font-size:0.7rem;background:#17a2b8;color:white;padding:2px 8px;border-radius:10px;margin-left:8px;">FRIEND</span>';
+                    heart = '🤝';
+                    numberDisplay = '🤝';
+                }
+                
                 html += `
-                    <div class="match-card" onclick="this.classList.toggle('expanded')">
+                    <div class="match-card ${isManual ? 'manual-match' : ''} ${isFriend ? 'friend-match' : ''}" onclick="this.classList.toggle('expanded')" style="${cardStyle}">
                         <div class="match-header">
-                            <div class="match-number">${idx + 1}</div>
-                            <div class="match-score">${match.score}%</div>
+                            <div class="match-number">${numberDisplay}</div>
+                            <div class="match-score">${match.score}%${badge}</div>
                         </div>
                         <div class="match-people">
                             <div class="match-person">
-                                <div class="email">${match.person1.email || 'Unknown'}</div>
-                                <div class="details">${match.person1.gender || '?'} • Grade ${match.person1.grade || '?'} • Age ${match.person1.age || '?'}</div>
+                                <div class="email">${match.person1.display_name || match.person1.email || 'Unknown'}</div>
+                                <div class="details">${match.person1.email} • ${match.person1.gender || '?'} • Grade ${match.person1.grade || '?'}</div>
                             </div>
-                            <div class="match-heart">💕</div>
+                            <div class="match-heart">${heart}</div>
                             <div class="match-person">
-                                <div class="email">${match.person2.email || 'Unknown'}</div>
-                                <div class="details">${match.person2.gender || '?'} • Grade ${match.person2.grade || '?'} • Age ${match.person2.age || '?'}</div>
+                                <div class="email">${match.person2.display_name || match.person2.email || 'Unknown'}</div>
+                                <div class="details">${match.person2.email} • ${match.person2.gender || '?'} • Grade ${match.person2.grade || '?'}</div>
                             </div>
                         </div>
                         <div class="match-breakdown">
+                            ${isManual ? `
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">💘 Manual Cupid Match</span>
+                                <span class="breakdown-value">${match.score}%</span>
+                            </div>
+                            ` : isFriend ? `
+                            <div class="breakdown-row" style="color:#17a2b8;">
+                                <span class="breakdown-label">🤝 Friend Match</span>
+                                <span class="breakdown-value">Matched based on compatibility</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">✨ Qualities Match</span>
+                                <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">🎵 Lifestyle</span>
+                                <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
+                            </div>
+                            ` : `
                             <div class="breakdown-row">
                                 <span class="breakdown-label">✨ Qualities Match</span>
                                 <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
@@ -1590,6 +1993,7 @@
                                 <span class="breakdown-label">💑 Preferences</span>
                                 <span class="breakdown-value">${match.breakdown?.preferences || 0}%</span>
                             </div>
+                            `}
                         </div>
                     </div>
                 `;
@@ -1681,7 +2085,16 @@
             }
             
             try {
-                await db.ref(`submissions/${id}`).remove();
+                const response = await fetch(`/sites/valentin/api/submission/${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to delete');
+                }
+                
                 log(`Deleted submission: ${email}`, 'success');
                 submissions = submissions.filter(s => s.id !== id);
                 updateStats();
@@ -1880,6 +2293,618 @@
                 document.getElementById(input.id + 'Val').textContent = input.value + '%';
             });
         });
+        
+        // ============================================
+        // CUPID MODE - Manual Pairing
+        // ============================================
+        let cupidSelection = { person1: null, person2: null };
+        let antiCupidSelection = { person1: null, person2: null };
+        let manualMatches = []; // Store manual matches that should be excluded from auto-matching
+        let blockedPairs = []; // Store blocked pairs that should never be matched
+        
+        function openCupidModal() {
+            cupidSelection = { person1: null, person2: null };
+            document.getElementById('cupidSearch1').value = '';
+            document.getElementById('cupidSearch2').value = '';
+            document.getElementById('cupidResults1').innerHTML = '';
+            document.getElementById('cupidResults2').innerHTML = '';
+            document.getElementById('cupidSelected1').classList.remove('has-selection');
+            document.getElementById('cupidSelected2').classList.remove('has-selection');
+            document.getElementById('cupidScore').value = 85;
+            document.getElementById('cupidScoreValue').textContent = '85%';
+            document.getElementById('cupidCreateBtn').disabled = true;
+            document.getElementById('cupidModal').classList.add('active');
+            renderExistingCupidMatches();
+        }
+        
+        function closeCupidModal() {
+            document.getElementById('cupidModal').classList.remove('active');
+        }
+        
+        function renderExistingCupidMatches() {
+            const section = document.getElementById('cupidExistingSection');
+            const list = document.getElementById('cupidExistingList');
+            
+            if (manualMatches.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            list.innerHTML = manualMatches.map((m, idx) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border:2px solid #e91e63;border-radius:12px;padding:15px;margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <span style="font-weight:600;color:#e91e63;">${m.person1.display_name || m.person1.email.split('@')[0]}</span>
+                        <span style="color:#999;margin:0 10px;">💕</span>
+                        <span style="font-weight:600;color:#e91e63;">${m.person2.display_name || m.person2.email.split('@')[0]}</span>
+                        <span style="color:#888;font-size:0.85rem;margin-left:15px;">(${m.score}%)</span>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeCupidMatch(${idx})">🗑️ Undo</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeCupidMatch(idx) {
+            const removed = manualMatches.splice(idx, 1)[0];
+            // Also remove from main matches array
+            const matchIdx = matches.findIndex(m => 
+                m.isManual && 
+                m.person1.email === removed.person1.email && 
+                m.person2.email === removed.person2.email
+            );
+            if (matchIdx !== -1) {
+                matches.splice(matchIdx, 1);
+            }
+            log(`💔 Removed Cupid match: ${removed.person1.email} + ${removed.person2.email}`, 'warning');
+            showToast('Cupid match removed', 'success');
+            renderExistingCupidMatches();
+            updateCupidCounts();
+            updateStats();
+            renderMatches();
+            saveCupidData();
+        }
+        
+        function updateCupidScore() {
+            const val = document.getElementById('cupidScore').value;
+            document.getElementById('cupidScoreValue').textContent = val + '%';
+        }
+        
+        function searchCupid(personNum) {
+            const query = document.getElementById(`cupidSearch${personNum}`).value.toLowerCase().trim();
+            const resultsDiv = document.getElementById(`cupidResults${personNum}`);
+            
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '<div style="padding:15px;color:#999;text-align:center;">Type at least 2 characters to search...</div>';
+                return;
+            }
+            
+            // Get already selected person to exclude
+            const otherPerson = personNum === 1 ? cupidSelection.person2 : cupidSelection.person1;
+            const otherEmail = otherPerson?.email?.toLowerCase();
+            
+            // Also exclude people already in manual matches
+            const manuallyPairedEmails = new Set();
+            manualMatches.forEach(m => {
+                manuallyPairedEmails.add(m.person1.email.toLowerCase());
+                manuallyPairedEmails.add(m.person2.email.toLowerCase());
+            });
+            
+            const results = submissions.filter(s => {
+                const email = (s.email || '').toLowerCase();
+                const name = (s.display_name || '').toLowerCase();
+                const matchesQuery = email.includes(query) || name.includes(query);
+                const notOther = email !== otherEmail;
+                const notManuallyPaired = !manuallyPairedEmails.has(email);
+                return matchesQuery && notOther && notManuallyPaired;
+            }).slice(0, 10);
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div style="padding:15px;color:#999;text-align:center;">No matching submissions found</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = results.map((s, idx) => `
+                <div class="cupid-result-item" onclick="selectCupidPerson(${personNum}, ${submissions.indexOf(s)})">
+                    <div>
+                        <div class="email">${s.display_name || s.email.split('@')[0]}</div>
+                        <div class="details">${s.email}</div>
+                    </div>
+                    <div class="details">${s.gender} • Grade ${s.grade} • Age ${s.age}</div>
+                </div>
+            `).join('');
+        }
+        
+        function selectCupidPerson(personNum, submissionIndex) {
+            const person = submissions[submissionIndex];
+            cupidSelection[`person${personNum}`] = person;
+            
+            // Update selected display
+            const selectedDiv = document.getElementById(`cupidSelected${personNum}`);
+            selectedDiv.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <strong style="color:#ff4d6d;">${person.display_name || person.email.split('@')[0]}</strong>
+                        <span style="color:#888;font-size:0.85rem;margin-left:10px;">${person.email}</span>
+                    </div>
+                    <div style="color:#666;font-size:0.85rem;">${person.gender} • Grade ${person.grade} • Age ${person.age}</div>
+                </div>
+            `;
+            selectedDiv.classList.add('has-selection');
+            
+            // Clear search
+            document.getElementById(`cupidSearch${personNum}`).value = '';
+            document.getElementById(`cupidResults${personNum}`).innerHTML = '';
+            
+            // Enable create button if both selected
+            document.getElementById('cupidCreateBtn').disabled = !(cupidSelection.person1 && cupidSelection.person2);
+        }
+        
+        function createCupidMatch() {
+            if (!cupidSelection.person1 || !cupidSelection.person2) {
+                showToast('Please select both people first', 'error');
+                return;
+            }
+            
+            // Check for conflict with Anti-Cupid
+            if (isPairBlocked(cupidSelection.person1.email, cupidSelection.person2.email)) {
+                showToast('⚠️ These two are blocked by Anti-Cupid! Remove the block first.', 'error');
+                return;
+            }
+            
+            // Check if already a Cupid match
+            const alreadyMatched = manualMatches.some(m => 
+                (m.person1.email === cupidSelection.person1.email && m.person2.email === cupidSelection.person2.email) ||
+                (m.person1.email === cupidSelection.person2.email && m.person2.email === cupidSelection.person1.email)
+            );
+            
+            if (alreadyMatched) {
+                showToast('These two are already a Cupid match!', 'error');
+                return;
+            }
+            
+            const score = parseInt(document.getElementById('cupidScore').value);
+            
+            const manualMatch = {
+                person1: cupidSelection.person1,
+                person2: cupidSelection.person2,
+                score: score,
+                isManual: true,
+                breakdown: { manual: score }
+            };
+            
+            // Add to manual matches (for exclusion from auto-matching)
+            manualMatches.push(manualMatch);
+            
+            // Add to main matches array
+            matches.push(manualMatch);
+            
+            // Update UI
+            updateCupidCounts();
+            updateStats();
+            renderMatches();
+            renderExistingCupidMatches();
+            
+            // Auto-save Cupid data
+            saveCupidData();
+            
+            log(`💘 CUPID: Manually paired ${cupidSelection.person1.email} + ${cupidSelection.person2.email} with ${score}% compatibility`, 'success');
+            showToast(`Manual match created: ${cupidSelection.person1.display_name || cupidSelection.person1.email.split('@')[0]} 💕 ${cupidSelection.person2.display_name || cupidSelection.person2.email.split('@')[0]}`, 'success');
+            
+            // Reset selection for another match
+            cupidSelection = { person1: null, person2: null };
+            document.getElementById('cupidSearch1').value = '';
+            document.getElementById('cupidSearch2').value = '';
+            document.getElementById('cupidResults1').innerHTML = '';
+            document.getElementById('cupidResults2').innerHTML = '';
+            document.getElementById('cupidSelected1').classList.remove('has-selection');
+            document.getElementById('cupidSelected2').classList.remove('has-selection');
+            document.getElementById('cupidCreateBtn').disabled = true;
+        }
+        
+        // ============================================
+        // ANTI-CUPID MODE - Block Pairing
+        // ============================================
+        function openAntiCupidModal() {
+            antiCupidSelection = { person1: null, person2: null };
+            document.getElementById('antiCupidSearch1').value = '';
+            document.getElementById('antiCupidSearch2').value = '';
+            document.getElementById('antiCupidResults1').innerHTML = '';
+            document.getElementById('antiCupidResults2').innerHTML = '';
+            document.getElementById('antiCupidSelected1').classList.remove('has-selection');
+            document.getElementById('antiCupidSelected2').classList.remove('has-selection');
+            document.getElementById('antiCupidCreateBtn').disabled = true;
+            document.getElementById('antiCupidModal').classList.add('active');
+            renderExistingBlockedPairs();
+        }
+        
+        function closeAntiCupidModal() {
+            document.getElementById('antiCupidModal').classList.remove('active');
+        }
+        
+        function renderExistingBlockedPairs() {
+            const section = document.getElementById('antiCupidExistingSection');
+            const list = document.getElementById('antiCupidExistingList');
+            
+            if (blockedPairs.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            list.innerHTML = blockedPairs.map((b, idx) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border:2px solid #c62828;border-radius:12px;padding:15px;margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <span style="font-weight:600;color:#c62828;">${b.person1.display_name || b.person1.email.split('@')[0]}</span>
+                        <span style="color:#999;margin:0 10px;">🚫</span>
+                        <span style="font-weight:600;color:#c62828;">${b.person2.display_name || b.person2.email.split('@')[0]}</span>
+                    </div>
+                    <button class="btn btn-sm btn-success" onclick="removeBlockedPair(${idx})">✅ Unblock</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeBlockedPair(idx) {
+            const removed = blockedPairs.splice(idx, 1)[0];
+            log(`✅ Unblocked pair: ${removed.person1.email} + ${removed.person2.email} can now be matched`, 'success');
+            showToast('Blocked pair removed', 'success');
+            renderExistingBlockedPairs();
+            updateCupidCounts();
+            saveCupidData();
+        }
+        
+        function searchAntiCupid(personNum) {
+            const query = document.getElementById(`antiCupidSearch${personNum}`).value.toLowerCase().trim();
+            const resultsDiv = document.getElementById(`antiCupidResults${personNum}`);
+            
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '<div style="padding:15px;color:#999;text-align:center;">Type at least 2 characters to search...</div>';
+                return;
+            }
+            
+            const otherPerson = personNum === 1 ? antiCupidSelection.person2 : antiCupidSelection.person1;
+            const otherEmail = otherPerson?.email?.toLowerCase();
+            
+            const results = submissions.filter(s => {
+                const email = (s.email || '').toLowerCase();
+                const name = (s.display_name || '').toLowerCase();
+                const matchesQuery = email.includes(query) || name.includes(query);
+                const notOther = email !== otherEmail;
+                return matchesQuery && notOther;
+            }).slice(0, 10);
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div style="padding:15px;color:#999;text-align:center;">No matching submissions found</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = results.map((s, idx) => `
+                <div class="cupid-result-item" onclick="selectAntiCupidPerson(${personNum}, ${submissions.indexOf(s)})">
+                    <div>
+                        <div class="email">${s.display_name || s.email.split('@')[0]}</div>
+                        <div class="details">${s.email}</div>
+                    </div>
+                    <div class="details">${s.gender} • Grade ${s.grade} • Age ${s.age}</div>
+                </div>
+            `).join('');
+        }
+        
+        function selectAntiCupidPerson(personNum, submissionIndex) {
+            const person = submissions[submissionIndex];
+            antiCupidSelection[`person${personNum}`] = person;
+            
+            const selectedDiv = document.getElementById(`antiCupidSelected${personNum}`);
+            selectedDiv.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <strong style="color:#c62828;">${person.display_name || person.email.split('@')[0]}</strong>
+                        <span style="color:#888;font-size:0.85rem;margin-left:10px;">${person.email}</span>
+                    </div>
+                    <div style="color:#666;font-size:0.85rem;">${person.gender} • Grade ${person.grade} • Age ${person.age}</div>
+                </div>
+            `;
+            selectedDiv.classList.add('has-selection');
+            
+            document.getElementById(`antiCupidSearch${personNum}`).value = '';
+            document.getElementById(`antiCupidResults${personNum}`).innerHTML = '';
+            
+            document.getElementById('antiCupidCreateBtn').disabled = !(antiCupidSelection.person1 && antiCupidSelection.person2);
+        }
+        
+        function createAntiCupidBlock() {
+            if (!antiCupidSelection.person1 || !antiCupidSelection.person2) {
+                showToast('Please select both people first', 'error');
+                return;
+            }
+            
+            // Check for conflict with Cupid
+            const isCupidMatch = manualMatches.some(m => 
+                (m.person1.email === antiCupidSelection.person1.email && m.person2.email === antiCupidSelection.person2.email) ||
+                (m.person1.email === antiCupidSelection.person2.email && m.person2.email === antiCupidSelection.person1.email)
+            );
+            
+            if (isCupidMatch) {
+                showToast('⚠️ These two are a Cupid match! Remove the match first.', 'error');
+                return;
+            }
+            
+            // Check if already blocked
+            const alreadyBlocked = blockedPairs.some(b => 
+                (b.person1.email === antiCupidSelection.person1.email && b.person2.email === antiCupidSelection.person2.email) ||
+                (b.person1.email === antiCupidSelection.person2.email && b.person2.email === antiCupidSelection.person1.email)
+            );
+            
+            if (alreadyBlocked) {
+                showToast('These two are already blocked from matching', 'error');
+                return;
+            }
+            
+            blockedPairs.push({
+                person1: antiCupidSelection.person1,
+                person2: antiCupidSelection.person2
+            });
+            
+            log(`💔 ANTI-CUPID: Blocked ${antiCupidSelection.person1.email} from matching with ${antiCupidSelection.person2.email}`, 'warning');
+            showToast(`Blocked: ${antiCupidSelection.person1.display_name || antiCupidSelection.person1.email.split('@')[0]} 🚫 ${antiCupidSelection.person2.display_name || antiCupidSelection.person2.email.split('@')[0]}`, 'success');
+            
+            // Update counts and auto-save
+            updateCupidCounts();
+            saveCupidData();
+            
+            // Reset selection
+            antiCupidSelection = { person1: null, person2: null };
+            document.getElementById('antiCupidSearch1').value = '';
+            document.getElementById('antiCupidSearch2').value = '';
+            document.getElementById('antiCupidResults1').innerHTML = '';
+            document.getElementById('antiCupidResults2').innerHTML = '';
+            document.getElementById('antiCupidSelected1').classList.remove('has-selection');
+            document.getElementById('antiCupidSelected2').classList.remove('has-selection');
+            document.getElementById('antiCupidCreateBtn').disabled = true;
+            
+            renderExistingBlockedPairs();
+        }
+        
+        // Helper to check if two people are blocked
+        function isPairBlocked(email1, email2) {
+            const e1 = email1.toLowerCase();
+            const e2 = email2.toLowerCase();
+            return blockedPairs.some(b => 
+                (b.person1.email.toLowerCase() === e1 && b.person2.email.toLowerCase() === e2) ||
+                (b.person1.email.toLowerCase() === e2 && b.person2.email.toLowerCase() === e1)
+            );
+        }
+        
+        // Override runMatchmaking to exclude manually paired people AND blocked pairs
+        const originalRunMatchmaking = runMatchmaking;
+        runMatchmaking = function() {
+            const params = getParams();
+            log('Starting matchmaking algorithm...', 'info');
+            log(`Parameters: Grade gap ≤${params.maxGradeGap}, Age gap ≤${params.maxAgeGap}`, 'info');
+            
+            // Get emails of manually paired people
+            const manuallyPairedEmails = new Set();
+            manualMatches.forEach(m => {
+                manuallyPairedEmails.add(m.person1.email.toLowerCase());
+                manuallyPairedEmails.add(m.person2.email.toLowerCase());
+            });
+            
+            if (manuallyPairedEmails.size > 0) {
+                log(`💘 ${manuallyPairedEmails.size / 2} manual Cupid pairs will be preserved`, 'info');
+            }
+            
+            // Filter out manually paired people from auto-matching
+            const eligibleSubmissions = submissions.filter(s => 
+                !manuallyPairedEmails.has(s.email.toLowerCase())
+            );
+            
+            if (eligibleSubmissions.length < 2) {
+                log('Not enough eligible submissions to create matches (excluding manual pairs)', 'warning');
+                // Just show manual matches
+                matches = [...manualMatches];
+                updateStats();
+                renderMatches();
+                showToast(`${manualMatches.length} manual matches preserved`, 'success');
+                return;
+            }
+            
+            showLoading('Running matchmaking algorithm...');
+            
+            setTimeout(() => {
+                try {
+                    const n = eligibleSubmissions.length;
+                    const compatMatrix = [];
+                    const compatDetails = {};
+                    
+                    log(`Building ${n}x${n} compatibility matrix (excluding ${manuallyPairedEmails.size} manually paired)...`, 'info');
+                    if (blockedPairs.length > 0) {
+                        log(`💔 ${blockedPairs.length} blocked pairs will be excluded`, 'info');
+                    }
+                    
+                    for (let i = 0; i < n; i++) {
+                        compatMatrix[i] = [];
+                        for (let j = 0; j < n; j++) {
+                            if (i === j) {
+                                compatMatrix[i][j] = 1000;
+                            } else if (!isEligible(eligibleSubmissions[i], eligibleSubmissions[j], params)) {
+                                compatMatrix[i][j] = 1000;
+                            } else if (isPairBlocked(eligibleSubmissions[i].email, eligibleSubmissions[j].email)) {
+                                // Anti-Cupid: blocked pair
+                                compatMatrix[i][j] = 1000;
+                            } else {
+                                const compat = calculateCompatibility(
+                                    eligibleSubmissions[i],
+                                    eligibleSubmissions[j],
+                                    params.weights
+                                );
+                                compatMatrix[i][j] = 100 - compat.total;
+                                compatDetails[`${i}-${j}`] = compat;
+                            }
+                        }
+                    }
+                    
+                    log('Running Hungarian algorithm for optimal pairing...', 'info');
+                    
+                    const assignments = hungarianAlgorithm(compatMatrix);
+                    
+                    // Start with manual matches
+                    matches = [...manualMatches];
+                    const used = new Set();
+                    
+                    assignments.forEach(([i, j]) => {
+                        if (!used.has(i) && !used.has(j) && compatMatrix[i][j] < 1000) {
+                            const key = `${i}-${j}`;
+                            const keyReverse = `${j}-${i}`;
+                            const details = compatDetails[key] || compatDetails[keyReverse];
+                            
+                            if (details) {
+                                matches.push({
+                                    person1: eligibleSubmissions[i],
+                                    person2: eligibleSubmissions[j],
+                                    score: details.total,
+                                    breakdown: details.breakdown
+                                });
+                                used.add(i);
+                                used.add(j);
+                            }
+                        }
+                    });
+                    
+                    matches.sort((a, b) => b.score - a.score);
+                    
+                    const autoMatches = matches.length - manualMatches.length;
+                    log(`Created ${autoMatches} auto matches + ${manualMatches.length} manual Cupid matches = ${matches.length} total`, 'success');
+                    
+                    if (matches.length > 0) {
+                        const avgScore = matches.reduce((s, m) => s + m.score, 0) / matches.length;
+                        log(`Average compatibility: ${Math.round(avgScore)}%`, 'success');
+                    }
+                    
+                    updateStats();
+                    renderMatches();
+                    hideLoading();
+                    showToast(`Created ${matches.length} matches (${manualMatches.length} manual)!`, 'success');
+                    
+                } catch (error) {
+                    log(`Error: ${error.message}`, 'error');
+                    hideLoading();
+                    showToast('Matchmaking failed', 'error');
+                }
+            }, 100);
+        };
+        
+        // ============================================
+        // SAVE TO SERVER
+        // ============================================
+        async function saveCupidData() {
+            // Save just Cupid/Anti-Cupid data independently
+            showLoading('Saving Cupid data...');
+            
+            try {
+                const response = await fetch('/sites/valentin/api/save-cupid', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        manualMatches: manualMatches,
+                        blockedPairs: blockedPairs
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`💘 Saved Cupid data: ${manualMatches.length} matches, ${blockedPairs.length} blocks`, 'success');
+                    showToast(`Saved ${manualMatches.length} Cupid matches and ${blockedPairs.length} blocks!`, 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to save');
+                }
+            } catch (error) {
+                log(`Error saving Cupid data: ${error.message}`, 'error');
+                showToast('Failed to save Cupid data: ' + error.message, 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function saveMatchesToServer() {
+            if (matches.length === 0 && manualMatches.length === 0 && blockedPairs.length === 0) {
+                showToast('Nothing to save!', 'error');
+                return;
+            }
+            
+            // If only Cupid data exists, save that
+            if (matches.length === 0 && (manualMatches.length > 0 || blockedPairs.length > 0)) {
+                return saveCupidData();
+            }
+            
+            showLoading('Saving matches to server...');
+            
+            try {
+                const response = await fetch('/sites/valentin/api/save-matches', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        matches: matches,
+                        manualMatches: manualMatches,
+                        blockedPairs: blockedPairs
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`💾 Saved ${data.matchCount} matches to server`, 'success');
+                    showToast(`Saved ${data.matchCount} matches to server!`, 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to save');
+                }
+            } catch (error) {
+                log(`Error saving: ${error.message}`, 'error');
+                showToast('Failed to save matches: ' + error.message, 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        // Load cupid/anti-cupid data from server
+        async function loadCupidData() {
+            try {
+                const response = await fetch('/sites/valentin/api/cupid-data');
+                const data = await response.json();
+                
+                // Always use server data (this ensures deletions persist)
+                manualMatches = data.manualMatches || [];
+                blockedPairs = data.blockedPairs || [];
+                
+                // Remove old manual matches from matches array
+                matches = matches.filter(m => !m.isManual);
+                
+                // Add loaded manual matches to matches array
+                manualMatches.forEach(m => {
+                    m.isManual = true;
+                    matches.push(m);
+                });
+                
+                if (manualMatches.length > 0) {
+                    log(`💘 Loaded ${manualMatches.length} Cupid matches from server`, 'info');
+                }
+                
+                if (blockedPairs.length > 0) {
+                    log(`💔 Loaded ${blockedPairs.length} blocked pairs from server`, 'info');
+                }
+                
+                updateCupidCounts();
+                updateStats();
+                renderMatches();
+            } catch (error) {
+                console.log('Could not load cupid data:', error);
+            }
+        }
+        
+        function updateCupidCounts() {
+            const cupidCountEl = document.getElementById('cupidCount');
+            const antiCupidCountEl = document.getElementById('antiCupidCount');
+            if (cupidCountEl) cupidCountEl.textContent = manualMatches.length;
+            if (antiCupidCountEl) antiCupidCountEl.textContent = blockedPairs.length;
+        }
         
         // ============================================
         // INIT
